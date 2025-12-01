@@ -1,7 +1,7 @@
-import json
 import os
-import httpx
+
 import pyotp
+
 from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
 
@@ -50,13 +50,16 @@ def get_access_token_via_totp(api_key, api_secret):
             'Content-Type': 'application/json'
         }
         
-        # Exact payload format from SDK
+        # Exact payload format from SDK - must include 'type' field
         payload = {
-            'totp': totp
+            'totp': totp,
+            'type': 'totp'  # Required: specifies authentication type
         }
         
         # Exact endpoint from SDK config
         endpoint = 'https://api.groww.in/v1/token/api/access'
+        
+        logger.debug(f"Groww auth: Requesting token with type=totp")
         
         try:
             response = client.post(
@@ -78,7 +81,7 @@ def get_access_token_via_totp(api_key, api_secret):
                 try:
                     error_data = response.json()
                     return None, f"HTTP error {response.status_code}: {error_data}"
-                except:
+                except Exception:
                     return None, f"HTTP error {response.status_code}: {response.text}"
                     
         except Exception as e:
