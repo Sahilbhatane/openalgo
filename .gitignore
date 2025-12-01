@@ -1,58 +1,99 @@
+# ================================
+# OpenAlgo .gitignore
+# ================================
+
+# ---- Environment & Secrets ----
+.env
+.env.*
+.env.local
+.env.development
+.env.staging
+.env.production
+!.env.example
+.flaskenv
+.secrets.baseline
+
+# ---- Python ----
 venopenalgo
 .venv/
-.env
+.venvv
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.egg-info/
+.python-version
+instance/
+
+# ---- Database Files ----
 openalgo.db
+*.db
 *.db-shm
 *.db-wal
 *.db-journal
-.env
-.flaskenv
-*.pyc
-__pycache__/
-instance/
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-.python-version
-config.ini
-.venvv
-
-#DB Files, CSV Files and Log/Tmp Files
-
-*.egg-info/
-*.db
 *.sqlite
+*.sqlite3
+
+# ---- Logs & Reports ----
+logs/
+log/
 *.log
+reports/
 *.tmp
+
+# ---- Checkpoint Files ----
 checkpoint.txt
 checkpoints.json
 
-# Strategy encryption key
+# ---- Strategy Encryption Key ----
 db/strategy_encryption.key
+keys/
 
-# CSV Files (except symbols.csv)
+# ---- CSV Files (except symbols) ----
 *.csv
 !symbols.csv
 !all_symbols.csv
 
-# Environments 
-.env 
-.venv 
-env/ 
-venv/ 
-ENV/ 
-env.bak/ 
-venv.bak/ 
+# ---- OS Generated ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
-# Node modules
+# ---- IDE & Editor ----
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---- Configuration ----
+config.ini
+
+# ---- Node.js ----
 /node_modules/
 
-# Build output
+# ---- Build Output ----
 /dist/
 /build/
 /.next/
 /out/
 
-# Tailwind CSS output
-# **/output.css
+# ---- Docker ----
+docker-compose.override.yml
+
+# ---- Coverage & Testing ----
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# ---- Misc ----
+*.bak
+*.backup
