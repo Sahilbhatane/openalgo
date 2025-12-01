@@ -1,0 +1,38 @@
+{
+    "description": "OpenAlgo Intraday Trading Bot Watchlist",
+    "version": "1.0",
+    "updated_at": "2025-12-01",
+    "symbols": [
+        {"symbol": "RELIANCE", "exchange": "NSE", "sector": "Oil & Gas"},
+        {"symbol": "TCS", "exchange": "NSE", "sector": "IT"},
+        {"symbol": "INFY", "exchange": "NSE", "sector": "IT"},
+        {"symbol": "HDFCBANK", "exchange": "NSE", "sector": "Banking"},
+        {"symbol": "ICICIBANK", "exchange": "NSE", "sector": "Banking"},
+        {"symbol": "SBIN", "exchange": "NSE", "sector": "Banking"},
+        {"symbol": "HINDUNILVR", "exchange": "NSE", "sector": "FMCG"},
+        {"symbol": "ITC", "exchange": "NSE", "sector": "FMCG"},
+        {"symbol": "BHARTIARTL", "exchange": "NSE", "sector": "Telecom"},
+        {"symbol": "KOTAKBANK", "exchange": "NSE", "sector": "Banking"},
+        {"symbol": "LT", "exchange": "NSE", "sector": "Infrastructure"},
+        {"symbol": "AXISBANK", "exchange": "NSE", "sector": "Banking"},
+        {"symbol": "ASIANPAINT", "exchange": "NSE", "sector": "Consumer"},
+        {"symbol": "MARUTI", "exchange": "NSE", "sector": "Auto"},
+        {"symbol": "TATAMOTORS", "exchange": "NSE", "sector": "Auto"},
+        {"symbol": "SUNPHARMA", "exchange": "NSE", "sector": "Pharma"},
+        {"symbol": "TITAN", "exchange": "NSE", "sector": "Consumer"},
+        {"symbol": "BAJFINANCE", "exchange": "NSE", "sector": "Finance"},
+        {"symbol": "WIPRO", "exchange": "NSE", "sector": "IT"},
+        {"symbol": "HCLTECH", "exchange": "NSE", "sector": "IT"}
+    ],
+    "filters": {
+        "min_price": 100,
+        "max_price": 10000,
+        "min_volume": 100000,
+        "sectors": ["Banking", "IT", "Auto", "Pharma", "FMCG", "Oil & Gas"]
+    },
+    "notes": [
+        "These are high-liquidity Nifty 50 stocks suitable for intraday trading",
+        "Adjust based on market conditions and personal preferences",
+        "Review and update weekly based on performance"
+    ]
+}
