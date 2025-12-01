@@ -1,0 +1,151 @@
+{
+  "date": "2025-12-01",
+  "generated_at": "2025-12-01T21:14:07.145927",
+  "mode": "test",
+  "symbols_analyzed": 3,
+  "symbols_selected": 3,
+  "total_capital": 1000000.0,
+  "risk_per_trade": 0.02,
+  "symbols": [
+    {
+      "symbol": "INFY",
+      "exchange": "NSE",
+      "score": 0.714698,
+      "entry_zones": [
+        [
+          3878.79,
+          3904.28
+        ],
+        [
+          3084.87,
+          3118.85
+        ]
+      ],
+      "stop_loss": 2369.0,
+      "targets": [
+        2793.79,
+        2878.75
+      ],
+      "suggested_qty": 39,
+      "indicators": {
+        "atr_14": 84.9578571428571,
+        "rsi_14": 55.48549957539871,
+        "vwap": 3101.863402327249,
+        "vwap_gap_pct": -0.1022,
+        "momentum_5m": 0.0266,
+        "momentum_15m": 0.0492,
+        "momentum_30m": 0.0435,
+        "avg_volume_20": 127217.05,
+        "current_price": 2538.92
+      },
+      "sentiment": {
+        "score": 0.0,
+        "headline_count": 0,
+        "news_available": false
+      },
+      "scores": {
+        "liquidity": 0.8507581224033013,
+        "volatility": 0.8528847482986358,
+        "momentum": 0.9849764683150397,
+        "sentiment_bias": 0.0
+      },
+      "data_quality": "good",
+      "timestamp": "2025-12-01T21:14:07.204340"
+    },
+    {
+      "symbol": "TCS",
+      "exchange": "NSE",
+      "score": 0.641841,
+      "entry_zones": [
+        [
+          7262.09,
+          7286.24
+        ],
+        [
+          5570.17,
+          5602.37
+        ]
+      ],
+      "stop_loss": 4291.89,
+      "targets": [
+        4694.46,
+        4774.97
+      ],
+      "suggested_qty": 22,
+      "indicators": {
+        "atr_14": 80.51285714285707,
+        "rsi_14": 67.49253029845235,
+        "vwap": 5586.267708241478,
+        "vwap_gap_pct": 0.2225,
+        "momentum_5m": 0.0018,
+        "momentum_15m": -0.011,
+        "momentum_30m": 0.0394,
+        "avg_volume_20": 121570.15,
+        "current_price": 4452.92
+      },
+      "sentiment": {
+        "score": 0.0,
+        "headline_count": 0,
+        "news_available": false
+      },
+      "scores": {
+        "liquidity": 0.8474717541528872,
+        "volatility": 0.8990773952135162,
+        "momentum": 0.8423741383953061,
+        "sentiment_bias": 0.0
+      },
+      "data_quality": "good",
+      "timestamp": "2025-12-01T21:14:07.146295"
+    },
+    {
+      "symbol": "RELIANCE",
+      "exchange": "NSE",
+      "score": 0.091094,
+      "entry_zones": [
+        [
+          7646.33,
+          7680.58
+        ],
+        [
+          5936.02,
+          5981.69
+        ]
+      ],
+      "stop_loss": 8762.12,
+      "targets": [
+        9332.99,
+        9447.17
+      ],
+      "suggested_qty": 11,
+      "indicators": {
+        "atr_14": 114.17428571428569,
+        "rsi_14": 50.31974619626602,
+        "vwap": 5958.851402632412,
+        "vwap_gap_pct": 0.1505,
+        "momentum_5m": -0.0084,
+        "momentum_15m": 0.0163,
+        "momentum_30m": -0.0415,
+        "avg_volume_20": 153093.45,
+        "current_price": 8990.47
+      },
+      "sentiment": {
+        "score": 0.0,
+        "headline_count": 0,
+        "news_available": false
+      },
+      "scores": {
+        "liquidity": 0.8641599078138905,
+        "volatility": 0.714459849251299,
+        "momentum": 0.1475433910677757,
+        "sentiment_bias": 0.0
+      },
+      "data_quality": "good",
+      "timestamp": "2025-12-01T21:14:07.177170"
+    }
+  ],
+  "metadata": {
+    "execution_time_seconds": 0.084982,
+    "news_api_available": false,
+    "data_source": "simulated"
+  }
+}
