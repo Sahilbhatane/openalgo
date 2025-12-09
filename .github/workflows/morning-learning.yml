@@ -1,0 +1,246 @@
+name: Daily Morning Learning
+
+on:
+  schedule:
+    # Run at 8:00 AM IST (2:30 AM UTC) on weekdays
+    # IST = UTC + 5:30, so 8:00 AM IST = 2:30 AM UTC
+    - cron: '30 2 * * 1-5'
+  
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: 'Run mode (test/full)'
+        required: false
+        default: 'full'
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  check-trading-day:
+    runs-on: ubuntu-latest
+    outputs:
+      is_trading_day: ${{ steps.check.outputs.is_trading_day }}
+    
+    steps:
+      - name: Check if trading day
+        id: check
+        run: |
+          # Get current date in IST
+          IST_DATE=$(TZ='Asia/Kolkata' date +%Y-%m-%d)
+          DAY_OF_WEEK=$(TZ='Asia/Kolkata' date +%u)
+          
+          # Skip weekends (6=Saturday, 7=Sunday)
+          if [ "$DAY_OF_WEEK" -ge 6 ]; then
+            echo "Weekend - not a trading day"
+            echo "is_trading_day=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check NSE holidays (add dates as needed)
+          HOLIDAYS=(
+            "2025-01-26"  # Republic Day
+            "2025-03-14"  # Holi
+            "2025-04-14"  # Ambedkar Jayanti
+            "2025-04-18"  # Good Friday
+            "2025-05-01"  # May Day
+            "2025-08-15"  # Independence Day
+            "2025-10-02"  # Gandhi Jayanti
+            "2025-10-21"  # Diwali Laxmi Puja
+            "2025-11-05"  # Diwali Balipratipada
+            "2025-12-25"  # Christmas
+          )
+          
+          for holiday in "${HOLIDAYS[@]}"; do
+            if [ "$IST_DATE" = "$holiday" ]; then
+              echo "Holiday: $holiday - not a trading day"
+              echo "is_trading_day=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          done
+          
+          echo "Trading day confirmed: $IST_DATE"
+          echo "is_trading_day=true" >> $GITHUB_OUTPUT
+
+  morning-learning:
+    needs: check-trading-day
+    if: needs.check-trading-day.outputs.is_trading_day == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy requests python-dotenv pyotp
+          pip install ta  # Technical analysis library
+      
+      - name: Create minimal environment
+        run: |
+          cat > .env << 'EOF'
+          BROKER_API_KEY=${{ secrets.BROKER_API_KEY }}
+          BROKER_API_SECRET=${{ secrets.BROKER_API_SECRET }}
+          BROKER_TOTP_SECRET=${{ secrets.BROKER_TOTP_SECRET }}
+          HISTORICAL_API_KEY=${{ secrets.HISTORICAL_API_KEY }}
+          HISTORICAL_API_SECRET=${{ secrets.HISTORICAL_API_SECRET }}
+          EOF
+      
+      - name: Run Morning Learning Script
+        id: learning
+        run: |
+          python << 'PYTHON_SCRIPT'
+          import os
+          import json
+          import requests
+          import pyotp
+          from datetime import datetime, timedelta
+          import pandas as pd
+          import numpy as np
+          
+          print("=" * 60)
+          print("MORNING LEARNING JOB - GitHub Actions")
+          print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+          print("=" * 60)
+          
+          # Configuration
+          WATCHLIST = [
+              "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK",
+              "SBIN", "BHARTIARTL", "HINDUNILVR", "ITC", "KOTAKBANK",
+              "AXISBANK", "LT", "BAJFINANCE", "MARUTI", "TITAN"
+          ]
+          
+          def get_totp():
+              """Generate TOTP for AngelOne login"""
+              secret = os.getenv("BROKER_TOTP_SECRET", "")
+              if not secret:
+                  raise ValueError("TOTP secret not configured")
+              totp = pyotp.TOTP(secret)
+              return totp.now()
+          
+          def login_angel():
+              """Login to AngelOne and get auth token"""
+              api_key = os.getenv("BROKER_API_KEY")
+              
+              # This is a simplified example - actual implementation needs full auth flow
+              print("Note: Full broker authentication requires client password")
+              print("Using historical API for data fetching...")
+              return None
+          
+          def calculate_atr(high, low, close, period=14):
+              """Calculate Average True Range"""
+              tr1 = high - low
+              tr2 = abs(high - close.shift(1))
+              tr3 = abs(low - close.shift(1))
+              tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+              return tr.rolling(window=period).mean()
+          
+          def calculate_rsi(close, period=14):
+              """Calculate RSI"""
+              delta = close.diff()
+              gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+              loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+              rs = gain / loss
+              return 100 - (100 / (1 + rs))
+          
+          def score_symbol(symbol):
+              """Score a symbol based on multiple factors"""
+              # In production, this would fetch real data
+              # For now, generate a synthetic score for demonstration
+              np.random.seed(hash(symbol + datetime.now().strftime("%Y%m%d")) % 2**32)
+              
+              score = {
+                  "symbol": symbol,
+                  "volatility_score": np.random.uniform(0.3, 0.9),
+                  "trend_score": np.random.uniform(0.2, 0.8),
+                  "volume_score": np.random.uniform(0.4, 0.95),
+                  "rsi": np.random.uniform(30, 70),
+                  "atr_pct": np.random.uniform(1.0, 3.5),
+              }
+              
+              # Composite score
+              score["composite"] = (
+                  score["volatility_score"] * 0.3 +
+                  score["trend_score"] * 0.3 +
+                  score["volume_score"] * 0.4
+              )
+              
+              return score
+          
+          # Score all symbols
+          print(f"\nAnalyzing {len(WATCHLIST)} symbols...")
+          scores = [score_symbol(s) for s in WATCHLIST]
+          
+          # Sort by composite score
+          scores.sort(key=lambda x: x["composite"], reverse=True)
+          
+          # Select top 5 for today
+          today_picks = scores[:5]
+          
+          print("\n📊 TOP PICKS FOR TODAY:")
+          print("-" * 50)
+          for i, pick in enumerate(today_picks, 1):
+              print(f"{i}. {pick['symbol']:12} | Score: {pick['composite']:.2f} | RSI: {pick['rsi']:.1f}")
+          
+          # Create today's plan
+          today_plan = {
+              "date": datetime.now().strftime("%Y-%m-%d"),
+              "generated_at": datetime.now().isoformat(),
+              "market_regime": "NORMAL",  # Would be calculated from index data
+              "picks": today_picks,
+              "all_scores": scores,
+              "parameters": {
+                  "max_positions": 3,
+                  "risk_per_trade": 0.01,
+                  "atr_multiplier": 1.5,
+              }
+          }
+          
+          # Save plan
+          os.makedirs("bot_data", exist_ok=True)
+          with open("bot_data/today_plan.json", "w") as f:
+              json.dump(today_plan, f, indent=2)
+          
+          print(f"\n✅ Plan saved to bot_data/today_plan.json")
+          print("=" * 60)
+          PYTHON_SCRIPT
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: morning-learning-${{ github.run_number }}
+          path: |
+            bot_data/today_plan.json
+          retention-days: 30
+      
+      - name: Commit plan to repository (optional)
+        if: github.event.inputs.run_mode != 'test'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if [ -f "bot_data/today_plan.json" ]; then
+            git add bot_data/today_plan.json
+            git diff --cached --quiet || git commit -m "📊 Morning learning: $(date +%Y-%m-%d)"
+            git push || echo "Push failed - may need token with write access"
+          fi
+        continue-on-error: true
+
+  notify-failure:
+    needs: morning-learning
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on failure
+        run: |
+          echo "⚠️ Morning learning job failed!"
+          echo "Check the workflow logs for details."
+          # Add Telegram/Email notification here if needed

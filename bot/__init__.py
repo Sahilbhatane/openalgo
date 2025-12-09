@@ -63,6 +63,11 @@ bot/
 │   ├── performance.py      # Equity curve and performance tracking
 │   └── export.py           # CSV/HTML/JSON export
 │
+├── quant/                   # Advanced quantitative analysis
+│   ├── __init__.py
+│   ├── monte_carlo.py      # Monte Carlo simulation (30,000+ paths)
+│   └── advanced_analysis.py # Market regime, Hurst exponent, VaR
+│
 └── tests/                   # Unit tests
     ├── __init__.py
     ├── test_charges.py
@@ -104,6 +109,10 @@ from .core.config import Config
 from .core.mode import TradingMode, ModeManager
 from .core.constants import TradingSession
 
+# Quant imports
+from .quant.monte_carlo import MonteCarloSimulator, MonteCarloConfig, MonteCarloResult
+from .quant.advanced_analysis import AdvancedQuantAnalysis, MarketRegime, VolatilityRegime
+
 # Main entry
 from .main import TradingBot
 
@@ -113,5 +122,12 @@ __all__ = [
     "TradingMode",
     "ModeManager",
     "TradingSession",
+    # Quant
+    "MonteCarloSimulator",
+    "MonteCarloConfig",
+    "MonteCarloResult",
+    "AdvancedQuantAnalysis",
+    "MarketRegime",
+    "VolatilityRegime",
 ]
 
