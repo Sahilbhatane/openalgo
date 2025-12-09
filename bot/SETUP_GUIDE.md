@@ -7,7 +7,17 @@
 3. [Manual Configuration Required](#manual-configuration-required)
 4. [Paper Mode Training](#paper-mode-training)
 5. [Potential Pitfalls & Failure Points](#potential-pitfalls--failure-points)
+   - [Login & Authentication Pitfalls](#-login--authentication-pitfalls)
+   - [API Pitfalls](#-api-pitfalls)
+   - [System Pitfalls](#️-system-pitfalls)
+   - [Data Pitfalls](#-data-pitfalls)
+   - [Trading Pitfalls](#-trading-pitfalls)
 6. [Suggestions for Improvement](#suggestions-for-improvement)
+7. [Quick Reference](#-quick-reference)
+
+> **Related Guides:**
+> - [AUTOMATION_GUIDE.md](./AUTOMATION_GUIDE.md) - Oracle Cloud / GitHub Actions setup
+> - [PITFALLS.md](./PITFALLS.md) - Extended pitfall analysis
 
 ---
 
@@ -248,7 +258,389 @@ Before switching to LIVE, ensure:
 
 ## ⚠️ Potential Pitfalls & Failure Points
 
-### CRITICAL FAILURES
+> This section covers ALL known failure modes with severity, probability, detection, and automation solutions.
+
+---
+
+### 🔐 LOGIN & AUTHENTICATION PITFALLS
+
+#### 1. TOTP Token Expiry
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 100% (daily occurrence) |
+| **What Happens** | Login fails, all API calls rejected, bot cannot trade |
+| **Detection** | API returns 401/403 error, "Invalid TOTP" message |
+
+**Manual Fix:**
+```bash
+# Login via browser or mobile app daily at 7:30 AM
+# Token refreshes for ~8 hours
+```
+
+**Automation (Partial - Telegram Reminder):**
+```bash
+# Add to crontab (7:15 AM IST = 1:45 AM UTC)
+45 1 * * 1-5 curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendMessage?chat_id=$CHAT_ID&text=🔔 Login to AngelOne now!"
+```
+
+**⚠️ Security Warning**: Fully automated TOTP is a security risk. If your server is compromised, attackers get full account access. Recommended: Manual daily login.
+
+---
+
+#### 2. Session Token Expiry (Mid-Day)
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 5-10% (occasional) |
+| **What Happens** | Bot loses connection at random time, orders fail |
+| **Detection** | Sudden API errors after hours of working |
+
+**Automation (Session Health Check):**
+```python
+# Add health check every 30 minutes
+def check_session_health():
+    try:
+        response = broker_api.get_profile()
+        if not response.get('success'):
+            send_telegram_alert("⚠️ Session may be expiring!")
+    except Exception as e:
+        send_telegram_alert(f"🔴 Session check failed: {e}")
+```
+
+---
+
+#### 3. Wrong Credentials in .env
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 30% (first-time setup) |
+| **What Happens** | Bot never starts, login always fails |
+| **Detection** | "Invalid credentials" error on startup |
+
+**Automation (Validation Script):**
+```bash
+# Run before starting bot
+python -c "
+import os
+required = ['BROKER_API_KEY', 'BROKER_API_SECRET', 'BROKER_TOTP_SECRET', 'OPENALGO_APIKEY']
+missing = [v for v in required if not os.getenv(v)]
+if missing: print(f'🔴 Missing: {missing}'); exit(1)
+print('✅ All credentials present')
+"
+```
+
+---
+
+### 🌐 API PITFALLS
+
+#### 4. API Rate Limiting
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 15% (during high activity) |
+| **What Happens** | Orders delayed or rejected, 429 errors |
+| **Detection** | HTTP 429 status code |
+
+**Broker Rate Limits:**
+| Broker | Requests/Second | Daily Limit |
+|--------|-----------------|-------------|
+| AngelOne | 10 | 10,000 |
+| Zerodha | 10 | Unlimited |
+| Fyers | 10 | 10,000 |
+
+**Automation (Throttling + Backoff):**
+```python
+import time
+
+def rate_limited_call(func, max_per_second=8):
+    """Rate limit API calls to stay under limits"""
+    min_interval = 1.0 / max_per_second
+    time.sleep(min_interval)
+    
+    for attempt in range(3):
+        try:
+            return func()
+        except RateLimitError:
+            wait = 2 ** attempt  # 1, 2, 4 seconds
+            time.sleep(wait)
+    raise Exception("Rate limit exceeded after retries")
+```
+
+---
+
+#### 5. API Timeout
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 5-10% |
+| **What Happens** | Order placed but no confirmation, duplicate risk |
+| **Detection** | Request takes > 30 seconds |
+
+**Automation (Timeout + Verification):**
+```python
+async def safe_order(order, timeout=30):
+    try:
+        return await asyncio.wait_for(place_order(order), timeout)
+    except asyncio.TimeoutError:
+        # CRITICAL: Check if order was placed before retrying!
+        existing = await get_order_book()
+        if order.tag in [o.tag for o in existing]:
+            return "Order already placed"
+        raise
+```
+
+---
+
+#### 6. Invalid Symbol/Token
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 10% (expiry days, new listings) |
+| **What Happens** | Order rejected with "Invalid instrument" |
+| **Detection** | API error on order placement |
+
+**Automation (Daily Symbol Refresh):**
+```python
+# Add to morning_learning.py
+async def refresh_valid_symbols():
+    instruments = await broker_api.get_instruments("NSE")
+    valid_symbols = {i['symbol']: i['token'] for i in instruments}
+    save_to_cache(valid_symbols)
+    logger.info(f"Refreshed {len(valid_symbols)} symbols")
+```
+
+---
+
+#### 7. Order Rejection (Insufficient Margin)
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 10-20% |
+| **What Happens** | Order rejected, position not opened |
+| **Detection** | "Insufficient margin" error |
+
+**Automation (Pre-Order Check):**
+```python
+async def check_margin(order):
+    required = await calculate_margin(order)
+    available = await get_available_margin()
+    
+    if required > available * 0.9:  # 10% buffer
+        send_telegram_alert(f"⚠️ Low margin! Need ₹{required:,.0f}")
+        return False
+    return True
+```
+
+---
+
+### 🖥️ SYSTEM PITFALLS
+
+#### 8. Server/Process Crash
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 2-5% (per month) |
+| **What Happens** | Bot stops, open positions unmanaged |
+| **Detection** | No logs, Telegram alerts stop |
+
+**Automation (Systemd Auto-Restart):**
+```ini
+# /etc/systemd/system/trading-bot.service
+[Service]
+ExecStart=/home/ubuntu/openalgo/.venv/bin/python -m bot.main
+Restart=always
+RestartSec=10
+```
+
+**Health Check Cron:**
+```bash
+# Every 5 minutes
+*/5 * * * * pgrep -f "bot.main" || systemctl restart trading-bot
+```
+
+---
+
+#### 9. Memory Leak
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 20% (over long runs) |
+| **What Happens** | Bot slows down, eventually crashes |
+| **Detection** | Memory usage increases over days |
+
+**Automation (Daily Restart):**
+```bash
+# Restart at 4 AM IST daily (market closed)
+# Cron: 30 22 * * * systemctl restart trading-bot
+```
+
+---
+
+#### 10. Internet Connectivity Loss
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 5-10% |
+| **What Happens** | All API calls fail, positions stuck |
+| **Detection** | Multiple consecutive timeouts |
+
+**Automation (Connectivity Monitor):**
+```python
+import socket
+
+def check_internet():
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except OSError:
+        return False
+
+# Alert after 3 consecutive failures
+```
+
+---
+
+### 📊 DATA PITFALLS
+
+#### 11. Stale/Delayed Quotes
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 10-15% |
+| **What Happens** | Trade at wrong price |
+| **Detection** | Data timestamp > 30 seconds old |
+
+**Automation (Freshness Validation):**
+```python
+def validate_quote(quote, max_age_seconds=30):
+    age = (datetime.now() - quote.timestamp).total_seconds()
+    if age > max_age_seconds:
+        logger.warning(f"Stale quote: {age:.0f}s old")
+        return False
+    return True
+```
+
+---
+
+#### 12. Missing OHLC Data (Gaps)
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 5% |
+| **What Happens** | Indicators calculate wrong values |
+| **Detection** | Gap in candle timestamps |
+
+**Automation (Gap Detection + Fill):**
+```python
+def detect_and_fill_gaps(df):
+    # Detect gaps > expected interval
+    gaps = df.index.to_series().diff() > timedelta(minutes=7)
+    if gaps.any():
+        logger.warning(f"Found {gaps.sum()} data gaps")
+        df = df.resample('5T').interpolate()
+    return df
+```
+
+---
+
+### 💹 TRADING PITFALLS
+
+#### 13. Slippage Higher Than Expected
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🟡 MODERATE |
+| **Probability** | 90% (always happens) |
+| **What Happens** | Fill price worse than signal price |
+| **Detection** | Compare signal vs fill |
+
+**Expected Slippage:**
+| Instrument | Normal | Volatile |
+|------------|--------|----------|
+| NIFTY F&O | 0.02-0.05% | 0.1-0.2% |
+| BANKNIFTY | 0.03-0.08% | 0.15-0.3% |
+
+**Automation (Slippage Tracking):**
+```python
+class SlippageTracker:
+    def record(self, signal_price, fill_price, side):
+        slippage = abs(fill_price - signal_price) / signal_price * 100
+        if slippage > 0.2:
+            logger.warning(f"High slippage: {slippage:.2f}%")
+```
+
+---
+
+#### 14. Stop Loss Not Executed (Gap)
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 2-5% (gap days) |
+| **What Happens** | Price gaps through SL, loss > expected |
+| **Detection** | Exit price worse than SL |
+
+**Automation (Multi-Layer SL):**
+```python
+async def place_layered_stop_loss(position, sl_price):
+    # Layer 1: SL-M order (fastest)
+    await place_sl_m_order(position, sl_price)
+    
+    # Layer 2: GTT order (survives session expiry)
+    await place_gtt_order(position, sl_price * 0.995)
+    
+    # Layer 3: Bot-level monitoring
+    monitor_price_for_exit(position, sl_price)
+```
+
+---
+
+#### 15. Duplicate Orders
+| Attribute | Details |
+|-----------|---------|
+| **Severity** | 🔴 CRITICAL |
+| **Probability** | 5% (network issues) |
+| **What Happens** | Same order placed twice |
+| **Detection** | Position 2x expected |
+
+**Automation (Idempotency Keys):**
+```python
+import hashlib
+
+def generate_order_id(signal):
+    unique = f"{signal.symbol}_{signal.side}_{signal.timestamp}"
+    return hashlib.md5(unique.encode()).hexdigest()[:12]
+
+def is_duplicate(order_id):
+    if order_id in recent_orders:
+        return True
+    recent_orders[order_id] = datetime.now()
+    return False
+```
+
+---
+
+### 🤖 AUTOMATION SUMMARY
+
+| Pitfall | Automatable? | How | Status |
+|---------|--------------|-----|--------|
+| TOTP Expiry | ⚠️ Partial | Telegram reminder | Add cron |
+| Session Refresh | ✅ Yes | Health check | Implement |
+| Rate Limiting | ✅ Yes | Throttling | ✅ Done |
+| API Timeout | ✅ Yes | Retry + verify | ✅ Done |
+| Symbol Validation | ✅ Yes | Daily refresh | Implement |
+| Margin Check | ✅ Yes | Pre-order | ✅ Done |
+| Process Crash | ✅ Yes | Systemd | Add service |
+| Memory Leak | ✅ Yes | Daily restart | Add cron |
+| Connectivity | ✅ Yes | Monitor | Implement |
+| Stale Data | ✅ Yes | Validation | ✅ Done |
+| Data Gaps | ✅ Yes | Interpolation | Implement |
+| Slippage | ✅ Yes | Tracking | Implement |
+| SL Gap Risk | ✅ Yes | Multi-layer SL | Implement |
+| Duplicate Orders | ✅ Yes | Idempotency | ✅ Done |
+
+---
+
+### CRITICAL FAILURES (Legacy Reference)
 
 | Issue | Impact | Mitigation |
 |-------|--------|------------|
@@ -344,6 +736,8 @@ Oracle offers **always-free** ARM instances:
 - Sufficient for bot + OpenAlgo
 - Zero cost
 
+See [AUTOMATION_GUIDE.md](./AUTOMATION_GUIDE.md) for complete Oracle Cloud setup.
+
 ---
 
 ## 🔄 Switching to LIVE Mode
@@ -361,3 +755,71 @@ Oracle offers **always-free** ARM instances:
 5. Gradually increase capital
 
 **NEVER skip paper trading phase!**
+
+---
+
+## 📖 Quick Reference
+
+### Daily Checklist
+
+```
+□ 7:30 AM - Login to AngelOne (refresh session)
+□ 7:45 AM - Verify bot is running
+□ 9:15 AM - Confirm market_open job triggered
+□ 3:30 PM - Check daily report generated
+□ Evening  - Review trades and P&L
+```
+
+### Common Commands
+
+```bash
+# Start OpenAlgo server
+python app.py
+
+# Start trading bot
+python -m bot.main
+
+# Validate environment
+python -c "import os; print([v for v in ['BROKER_API_KEY','BROKER_TOTP_SECRET'] if not os.getenv(v)])"
+
+# Check bot logs
+type bot_data\logs\bot_%date%.log
+
+# View today's report
+start bot_data\reports\daily\report_%date%.html
+```
+
+### Telegram Alert Codes
+
+| Alert | Meaning | Action |
+|-------|---------|--------|
+| 🟢 | Bot started | None |
+| 🔵 | Trade entry | Monitor |
+| 🟡 | Warning | Check logs |
+| 🔴 | Error/Exit | Investigate |
+| ⚠️ | Session expiring | Re-login |
+| 💰 | Daily P&L | Review |
+
+### Emergency Procedures
+
+| Situation | Action |
+|-----------|--------|
+| Bot crashed | `python -m bot.main` |
+| Session expired | Login to broker, restart bot |
+| Wrong position | Manual close via broker app |
+| Internet down | Use mobile hotspot |
+| Kill switch triggered | Review reason, reset in bot_data/ |
+
+### File Locations
+
+| File | Purpose |
+|------|---------|
+| `.env` | Credentials & config |
+| `bot_data/logs/` | Execution logs |
+| `bot_data/reports/` | Daily reports |
+| `bot_data/today_plan.json` | Morning analysis |
+| `bot_data/mode_state.json` | PAPER/LIVE state |
+
+---
+
+*Last Updated: December 2025*
