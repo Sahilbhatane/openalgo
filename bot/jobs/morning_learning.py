@@ -12,6 +12,8 @@ Tasks:
 
 import json
 import logging
+import os
+import re
 from pathlib import Path
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass, field, asdict
@@ -80,6 +82,7 @@ class TodayPlan:
     created_at: str = ""
     
     # Symbols to trade (sorted by score)
+    top_symbol: str = ""  # Best single candidate (top of top_symbols)
     top_symbols: List[str] = field(default_factory=list)
     symbol_scores: List[SymbolScore] = field(default_factory=list)
     
@@ -129,6 +132,8 @@ class MorningLearningJob:
         data_dir: Optional[Path] = None,
         watchlist: Optional[List[str]] = None,
         top_n: int = 10,
+        universe_source: Optional[str] = None,
+        universe_limit: Optional[int] = None,
     ):
         """
         Initialize morning learning job.
@@ -138,11 +143,19 @@ class MorningLearningJob:
             data_dir: Directory for saving plans
             watchlist: Symbols to analyze
             top_n: Number of top symbols to include in plan
+            universe_source: Where to build the symbol universe from.
+                - "watchlist" (default): uses watchlist or DEFAULT_WATCHLIST
+                - "instruments_db": uses local SymToken database table
+                - "instruments_api": calls OpenAlgo /api/v1/instruments endpoint
+            universe_limit: Maximum symbols to analyze (safety cap). Defaults to env MORNING_UNIVERSE_LIMIT or 250.
         """
         self.data_fetcher = data_fetcher
         self.data_dir = data_dir or Path("bot_data/plans")
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.watchlist = watchlist or DEFAULT_WATCHLIST
+        # If watchlist is explicitly provided, always use it.
+        self._explicit_watchlist = watchlist
+        self.universe_source = (universe_source or os.getenv("MORNING_UNIVERSE_SOURCE", "watchlist")).strip().lower()
+        self.universe_limit = universe_limit or int(os.getenv("MORNING_UNIVERSE_LIMIT", "250"))
         self.top_n = top_n
     
     def run(self) -> TodayPlan:
@@ -156,9 +169,12 @@ class MorningLearningJob:
         
         today = date.today()
         
+        universe = self._get_universe()
+        analyzed_symbols = universe[: max(self.universe_limit, 0)]
+
         # Score each symbol
         symbol_scores = []
-        for symbol in self.watchlist:
+        for symbol in analyzed_symbols:
             try:
                 score = self._analyze_symbol(symbol)
                 if score:
@@ -171,6 +187,7 @@ class MorningLearningJob:
         
         # Get top symbols
         top_symbols = [s.symbol for s in symbol_scores[:self.top_n]]
+        top_symbol = top_symbols[0] if top_symbols else ""
         
         # Analyze market trend
         market_trend = self._analyze_market_trend()
@@ -180,6 +197,7 @@ class MorningLearningJob:
         plan = TodayPlan(
             date=today.isoformat(),
             created_at=datetime.now().isoformat(),
+            top_symbol=top_symbol,
             top_symbols=top_symbols,
             symbol_scores=symbol_scores[:self.top_n],
             market_trend=market_trend,
@@ -188,7 +206,8 @@ class MorningLearningJob:
             max_positions=3 if volatility_regime == "NORMAL" else 2,
             position_size_pct=0.30 if volatility_regime == "LOW" else 0.20,
             notes=[
-                f"Analyzed {len(self.watchlist)} symbols",
+                f"Universe source: {self._describe_universe_source()}",
+                f"Analyzed {len(analyzed_symbols)} symbols",
                 f"Top scorers: {', '.join(top_symbols[:5])}",
                 f"Market trend: {market_trend}",
                 f"Volatility: {volatility_regime}",
@@ -201,6 +220,108 @@ class MorningLearningJob:
         logger.info(f"Morning learning complete. Top symbols: {top_symbols[:5]}")
         
         return plan
+
+    def _describe_universe_source(self) -> str:
+        if self._explicit_watchlist is not None:
+            return "explicit_watchlist"
+        return self.universe_source
+
+    def _get_universe(self) -> List[str]:
+        """Build the list of symbols to analyze."""
+        if self._explicit_watchlist is not None:
+            return self._normalize_symbols(self._explicit_watchlist)
+
+        source = self.universe_source
+        if source in {"watchlist", "default"}:
+            return self._normalize_symbols(DEFAULT_WATCHLIST)
+        if source in {"instruments_db", "db"}:
+            symbols = self._fetch_universe_from_instruments_db()
+            return symbols if symbols else self._normalize_symbols(DEFAULT_WATCHLIST)
+        if source in {"instruments_api", "api"}:
+            symbols = self._fetch_universe_from_instruments_api()
+            return symbols if symbols else self._normalize_symbols(DEFAULT_WATCHLIST)
+
+        logger.warning(f"Unknown MORNING_UNIVERSE_SOURCE='{source}', falling back to DEFAULT_WATCHLIST")
+        return self._normalize_symbols(DEFAULT_WATCHLIST)
+
+    def _normalize_symbols(self, symbols: List[str]) -> List[str]:
+        """Upper-case, de-dupe, and filter obviously invalid symbols."""
+        seen: set[str] = set()
+        normalized: List[str] = []
+
+        # Allow common NSE symbol chars (e.g. M&M, L&TFH, BAJAJ-AUTO)
+        pattern = re.compile(r"^[A-Z0-9&._-]+$")
+
+        for raw in symbols or []:
+            if raw is None:
+                continue
+            sym = str(raw).strip().upper()
+            if not sym:
+                continue
+            if not pattern.match(sym):
+                continue
+            if sym in seen:
+                continue
+            seen.add(sym)
+            normalized.append(sym)
+
+        return normalized
+
+    def _fetch_universe_from_instruments_db(self) -> List[str]:
+        """Fetch symbols from local SymToken database table."""
+        try:
+            from database.symbol import db_session, SymToken
+
+            exchange = os.getenv("MORNING_UNIVERSE_EXCHANGE", "NSE").strip().upper()
+            instrumenttype = os.getenv("MORNING_UNIVERSE_INSTRUMENTTYPE", "").strip().upper()
+            limit = max(self.universe_limit, 0)
+
+            query = db_session.query(SymToken.symbol)
+            if exchange:
+                query = query.filter(SymToken.exchange == exchange)
+            if instrumenttype:
+                query = query.filter(SymToken.instrumenttype == instrumenttype)
+
+            # Deterministic ordering to make runs stable
+            query = query.order_by(SymToken.symbol.asc()).distinct().limit(limit)
+            rows = query.all()
+
+            symbols = [row[0] for row in rows if row and row[0]]
+            return self._normalize_symbols(symbols)
+        except Exception as e:
+            logger.warning(f"Failed to build universe from instruments DB: {e}")
+            return []
+
+    def _fetch_universe_from_instruments_api(self) -> List[str]:
+        """Fetch symbols via OpenAlgo instruments REST API."""
+        try:
+            import requests
+
+            base_url = os.getenv("OPENALGO_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
+            api_key = (os.getenv("OPENALGO_API_KEY") or os.getenv("OPENALGO_APIKEY") or "").strip()
+            if not api_key:
+                logger.warning("OPENALGO_API_KEY not set; cannot call instruments API")
+                return []
+
+            exchange = os.getenv("MORNING_UNIVERSE_EXCHANGE", "NSE").strip().upper()
+            limit = max(self.universe_limit, 0)
+
+            url = f"{base_url}/api/v1/instruments"
+            resp = requests.get(
+                url,
+                params={"apikey": api_key, "exchange": exchange, "format": "json"},
+                timeout=60,
+            )
+            resp.raise_for_status()
+            payload = resp.json()
+
+            data = payload.get("data", []) if isinstance(payload, dict) else []
+            symbols = [row.get("symbol") for row in data if isinstance(row, dict)]
+            normalized = self._normalize_symbols(symbols)
+            return normalized[:limit]
+        except Exception as e:
+            logger.warning(f"Failed to build universe from instruments API: {e}")
+            return []
     
     def _analyze_symbol(self, symbol: str) -> Optional[SymbolScore]:
         """
