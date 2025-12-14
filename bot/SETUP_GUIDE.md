@@ -109,7 +109,8 @@ bot_data/
 │   ├── daily/               # Daily trading reports
 │   │   └── report_YYYY-MM-DD.html
 │   └── equity_curve.json    # Equity tracking
-├── today_plan.json          # Morning learning output
+├── plans/
+│   └── today_plan.json      # Morning learning output
 └── mode_state.json          # PAPER/LIVE mode state
 ```
 
@@ -208,6 +209,30 @@ The bot runs automatically during market hours:
 | 9:20-3:10 PM | Active trading window |
 | 3:10 PM | Square off all positions |
 | 3:35 PM | Daily report generated |
+
+### Morning Learner: scan more stocks
+
+By default, the morning learner analyzes a small built-in watchlist. To scan a much bigger universe and automatically pick the best single stock, set these environment variables (in `.env`):
+
+```env
+# Choose where the universe comes from:
+# - watchlist (default)
+# - instruments_db (uses local SymToken DB via DATABASE_URL)
+# - instruments_api (calls OpenAlgo: /api/v1/instruments)
+MORNING_UNIVERSE_SOURCE=instruments_db
+
+# Safety cap: how many symbols to analyze each morning
+MORNING_UNIVERSE_LIMIT=250
+
+# When using instruments_db or instruments_api
+MORNING_UNIVERSE_EXCHANGE=NSE
+# Optional (if your SymToken table uses it for equities)
+MORNING_UNIVERSE_INSTRUMENTTYPE=EQ
+```
+
+The output plan now includes:
+- `top_symbol`: best single candidate
+- `top_symbols`: top N candidates (default N=10)
 
 **You don't need to manually run anything daily** - just ensure:
 1. OpenAlgo server is running
@@ -817,7 +842,7 @@ start bot_data\reports\daily\report_%date%.html
 | `.env` | Credentials & config |
 | `bot_data/logs/` | Execution logs |
 | `bot_data/reports/` | Daily reports |
-| `bot_data/today_plan.json` | Morning analysis |
+| `bot_data/plans/today_plan.json` | Morning analysis |
 | `bot_data/mode_state.json` | PAPER/LIVE state |
 
 ---

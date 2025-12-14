@@ -180,7 +180,28 @@ class TradingBot:
     def _run_morning_learning(self) -> None:
         """Run morning learning job"""
         logger.info("Running morning learning...")
-        # Morning learning implementation would go here
+        try:
+            from data.historical_client import HistoricalClient
+
+            data_fetcher = HistoricalClient(
+                api_key=self.config.broker.historical_api_key or None,
+                api_secret=self.config.broker.historical_api_secret or None,
+            )
+
+            plans_dir = self.config.data_dir / "plans"
+            job = MorningLearningJob(
+                data_fetcher=data_fetcher,
+                data_dir=plans_dir,
+                # Universe selection is controlled by:
+                # - MORNING_UNIVERSE_SOURCE (watchlist|instruments_db|instruments_api)
+                # - MORNING_UNIVERSE_LIMIT
+                # - MORNING_UNIVERSE_EXCHANGE / MORNING_UNIVERSE_INSTRUMENTTYPE
+            )
+            plan = job.run()
+            if plan.top_symbol:
+                logger.info(f"Morning learning top symbol: {plan.top_symbol}")
+        except Exception as e:
+            logger.error(f"Morning learning failed: {e}", exc_info=True)
     
     def _run_market_open(self) -> None:
         """Run market open job"""
