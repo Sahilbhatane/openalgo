@@ -1,189 +1,189 @@
 {
-  "date": "2026-10-27",
-  "generated_at": "2026-10-27T08:15:25.446762",
+  "date": "2026-10-28",
+  "generated_at": "2026-10-28T08:52:53.120962",
   "market_regime": "NORMAL",
   "picks": [
     {
-      "symbol": "MARUTI",
-      "volatility_score": 0.7858524049848297,
-      "trend_score": 0.6770848333142512,
-      "volume_score": 0.8922343254811897,
-      "rsi": 36.67008297669578,
-      "atr_pct": 3.068239430134659,
-      "composite": 0.7957749016822002
-    },
-    {
-      "symbol": "LT",
-      "volatility_score": 0.7606977228527987,
-      "trend_score": 0.5716561681577268,
-      "volume_score": 0.8425616432407382,
-      "rsi": 44.92516769336693,
-      "atr_pct": 3.4029058962534195,
-      "composite": 0.7367308245994529
+      "symbol": "TCS",
+      "volatility_score": 0.7460739408257606,
+      "trend_score": 0.6700878674704458,
+      "volume_score": 0.837246397839448,
+      "rsi": 66.53516008942319,
+      "atr_pct": 3.129876825116688,
+      "composite": 0.7597471016246411
     },
     {
       "symbol": "TITAN",
-      "volatility_score": 0.8672061986139652,
-      "trend_score": 0.5385491586387864,
-      "volume_score": 0.7539088700670118,
-      "rsi": 38.24037059451318,
-      "atr_pct": 3.0366554021056045,
-      "composite": 0.7232901552026302
+      "volatility_score": 0.8992512033474229,
+      "trend_score": 0.7877598891100452,
+      "volume_score": 0.5996309765231256,
+      "rsi": 64.33931727796133,
+      "atr_pct": 1.14696242155896,
+      "composite": 0.7459557183464907
     },
     {
-      "symbol": "BHARTIARTL",
-      "volatility_score": 0.5705728216894351,
-      "trend_score": 0.707352402269025,
-      "volume_score": 0.827720130920502,
-      "rsi": 49.13347790803762,
-      "atr_pct": 2.532824981955691,
-      "composite": 0.7144656195557388
+      "symbol": "ITC",
+      "volatility_score": 0.8849453474664137,
+      "trend_score": 0.5762890561889686,
+      "volume_score": 0.7244167708065372,
+      "rsi": 36.96632242406597,
+      "atr_pct": 2.672922172138361,
+      "composite": 0.7281370294192295
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "volatility_score": 0.47118576040987026,
+      "trend_score": 0.6133849419784676,
+      "volume_score": 0.8891361516838924,
+      "rsi": 56.5943234861534,
+      "atr_pct": 1.994215360051769,
+      "composite": 0.6810256713900583
     },
     {
       "symbol": "HDFCBANK",
-      "volatility_score": 0.8058546434460307,
-      "trend_score": 0.25410491900610965,
-      "volume_score": 0.8999867421174914,
-      "rsi": 61.01513549063617,
-      "atr_pct": 2.5244577475246164,
-      "composite": 0.6779825655826387
+      "volatility_score": 0.857949235796196,
+      "trend_score": 0.22748043500730056,
+      "volume_score": 0.8870821753060191,
+      "rsi": 40.66420387738218,
+      "atr_pct": 2.9261052332384136,
+      "composite": 0.6804617713634566
     }
   ],
   "all_scores": [
     {
-      "symbol": "MARUTI",
-      "volatility_score": 0.7858524049848297,
-      "trend_score": 0.6770848333142512,
-      "volume_score": 0.8922343254811897,
-      "rsi": 36.67008297669578,
-      "atr_pct": 3.068239430134659,
-      "composite": 0.7957749016822002
-    },
-    {
-      "symbol": "LT",
-      "volatility_score": 0.7606977228527987,
-      "trend_score": 0.5716561681577268,
-      "volume_score": 0.8425616432407382,
-      "rsi": 44.92516769336693,
-      "atr_pct": 3.4029058962534195,
-      "composite": 0.7367308245994529
+      "symbol": "TCS",
+      "volatility_score": 0.7460739408257606,
+      "trend_score": 0.6700878674704458,
+      "volume_score": 0.837246397839448,
+      "rsi": 66.53516008942319,
+      "atr_pct": 3.129876825116688,
+      "composite": 0.7597471016246411
     },
     {
       "symbol": "TITAN",
-      "volatility_score": 0.8672061986139652,
-      "trend_score": 0.5385491586387864,
-      "volume_score": 0.7539088700670118,
-      "rsi": 38.24037059451318,
-      "atr_pct": 3.0366554021056045,
-      "composite": 0.7232901552026302
-    },
-    {
-      "symbol": "BHARTIARTL",
-      "volatility_score": 0.5705728216894351,
-      "trend_score": 0.707352402269025,
-      "volume_score": 0.827720130920502,
-      "rsi": 49.13347790803762,
-      "atr_pct": 2.532824981955691,
-      "composite": 0.7144656195557388
-    },
-    {
-      "symbol": "HDFCBANK",
-      "volatility_score": 0.8058546434460307,
-      "trend_score": 0.25410491900610965,
-      "volume_score": 0.8999867421174914,
-      "rsi": 61.01513549063617,
-      "atr_pct": 2.5244577475246164,
-      "composite": 0.6779825655826387
+      "volatility_score": 0.8992512033474229,
+      "trend_score": 0.7877598891100452,
+      "volume_score": 0.5996309765231256,
+      "rsi": 64.33931727796133,
+      "atr_pct": 1.14696242155896,
+      "composite": 0.7459557183464907
     },
     {
       "symbol": "ITC",
-      "volatility_score": 0.5565184477248943,
-      "trend_score": 0.4917753099818613,
-      "volume_score": 0.8354139679848993,
-      "rsi": 43.821534923460376,
-      "atr_pct": 1.106457461297643,
-      "composite": 0.6486537145059864
-    },
-    {
-      "symbol": "TCS",
-      "volatility_score": 0.6534716089030813,
-      "trend_score": 0.6729738106914751,
-      "volume_score": 0.6169153650855959,
-      "rsi": 35.38480752599698,
-      "atr_pct": 1.1485355269092343,
-      "composite": 0.6446997719126053
-    },
-    {
-      "symbol": "HINDUNILVR",
-      "volatility_score": 0.7867745085971871,
-      "trend_score": 0.6315422430955495,
-      "volume_score": 0.5281032011476786,
-      "rsi": 57.474598052417036,
-      "atr_pct": 2.3387845279569044,
-      "composite": 0.6367363059668923
-    },
-    {
-      "symbol": "INFY",
-      "volatility_score": 0.7884535095708494,
-      "trend_score": 0.48308010201393986,
-      "volume_score": 0.5244239219843752,
-      "rsi": 33.36767383000351,
-      "atr_pct": 1.7018075821847543,
-      "composite": 0.5912296522691869
-    },
-    {
-      "symbol": "SBIN",
-      "volatility_score": 0.5071130871612295,
-      "trend_score": 0.44930834511296835,
-      "volume_score": 0.6558711578420404,
-      "rsi": 50.926740649475775,
-      "atr_pct": 2.821293889085167,
-      "composite": 0.5492748928190756
-    },
-    {
-      "symbol": "RELIANCE",
-      "volatility_score": 0.6512050609034812,
-      "trend_score": 0.2203570783648605,
-      "volume_score": 0.691208700365314,
-      "rsi": 43.93118261107387,
-      "atr_pct": 3.163021050004836,
-      "composite": 0.5379521219266281
-    },
-    {
-      "symbol": "ICICIBANK",
-      "volatility_score": 0.5113370893490317,
-      "trend_score": 0.4529261492524843,
-      "volume_score": 0.6062886218527084,
-      "rsi": 62.13886465371027,
-      "atr_pct": 2.3949191825449097,
-      "composite": 0.5317944203215381
-    },
-    {
-      "symbol": "KOTAKBANK",
-      "volatility_score": 0.36035696749899326,
-      "trend_score": 0.752721824163787,
-      "volume_score": 0.45716741031584773,
-      "rsi": 66.93959487945216,
-      "atr_pct": 3.4641336103596636,
-      "composite": 0.5167906016251731
+      "volatility_score": 0.8849453474664137,
+      "trend_score": 0.5762890561889686,
+      "volume_score": 0.7244167708065372,
+      "rsi": 36.96632242406597,
+      "atr_pct": 2.672922172138361,
+      "composite": 0.7281370294192295
     },
     {
       "symbol": "BAJFINANCE",
-      "volatility_score": 0.47575442925973366,
-      "trend_score": 0.2552931398268273,
-      "volume_score": 0.6056486306350259,
-      "rsi": 68.63774931133318,
-      "atr_pct": 2.7606284366741543,
-      "composite": 0.4615737229799787
+      "volatility_score": 0.47118576040987026,
+      "trend_score": 0.6133849419784676,
+      "volume_score": 0.8891361516838924,
+      "rsi": 56.5943234861534,
+      "atr_pct": 1.994215360051769,
+      "composite": 0.6810256713900583
+    },
+    {
+      "symbol": "HDFCBANK",
+      "volatility_score": 0.857949235796196,
+      "trend_score": 0.22748043500730056,
+      "volume_score": 0.8870821753060191,
+      "rsi": 40.66420387738218,
+      "atr_pct": 2.9261052332384136,
+      "composite": 0.6804617713634566
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "volatility_score": 0.7022319216337749,
+      "trend_score": 0.46219058764343735,
+      "volume_score": 0.6189746488431505,
+      "rsi": 55.30953996599341,
+      "atr_pct": 2.6689220223172696,
+      "composite": 0.5969166123204239
     },
     {
       "symbol": "AXISBANK",
-      "volatility_score": 0.5498071086156868,
-      "trend_score": 0.3091284812877082,
-      "volume_score": 0.401618334852503,
-      "rsi": 66.29822205199511,
-      "atr_pct": 3.0597034519938333,
-      "composite": 0.41832801091201965
+      "volatility_score": 0.5865745934200313,
+      "trend_score": 0.7526567059468023,
+      "volume_score": 0.47346408714475585,
+      "rsi": 49.34569594004462,
+      "atr_pct": 2.5069867805428983,
+      "composite": 0.5911550246679524
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "volatility_score": 0.5404435609407274,
+      "trend_score": 0.4050201563739296,
+      "volume_score": 0.7644190763290675,
+      "rsi": 38.6083699229939,
+      "atr_pct": 2.543284089697301,
+      "composite": 0.5894067457260241
+    },
+    {
+      "symbol": "RELIANCE",
+      "volatility_score": 0.6134840195527016,
+      "trend_score": 0.4023246610924341,
+      "volume_score": 0.705958969310742,
+      "rsi": 63.320930143210134,
+      "atr_pct": 2.633827433169284,
+      "composite": 0.5871261919178374
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "volatility_score": 0.6044439306499717,
+      "trend_score": 0.3476617432635404,
+      "volume_score": 0.7139105704815087,
+      "rsi": 40.154018682326864,
+      "atr_pct": 2.74406616160152,
+      "composite": 0.5711959303666572
+    },
+    {
+      "symbol": "INFY",
+      "volatility_score": 0.30982442722608955,
+      "trend_score": 0.48436898544358375,
+      "volume_score": 0.7623244574997756,
+      "rsi": 66.60818299266629,
+      "atr_pct": 3.466420341119748,
+      "composite": 0.5431878068008122
+    },
+    {
+      "symbol": "LT",
+      "volatility_score": 0.5382066914717516,
+      "trend_score": 0.4435758417541072,
+      "volume_score": 0.5310825032948044,
+      "rsi": 60.82027350059997,
+      "atr_pct": 1.1439877747787754,
+      "composite": 0.5069677612856794
+    },
+    {
+      "symbol": "SBIN",
+      "volatility_score": 0.3288344626790576,
+      "trend_score": 0.26769419798847516,
+      "volume_score": 0.7681856851841413,
+      "rsi": 52.06222520800334,
+      "atr_pct": 1.255156124072962,
+      "composite": 0.48623287227391637
+    },
+    {
+      "symbol": "ICICIBANK",
+      "volatility_score": 0.4283605796390609,
+      "trend_score": 0.41756433762622486,
+      "volume_score": 0.504691789410435,
+      "rsi": 43.999679427601066,
+      "atr_pct": 1.557500565782587,
+      "composite": 0.4556541909437597
+    },
+    {
+      "symbol": "MARUTI",
+      "volatility_score": 0.4598045752742226,
+      "trend_score": 0.25979814110511407,
+      "volume_score": 0.5609024629037143,
+      "rsi": 52.29095277363338,
+      "atr_pct": 1.9997155020669777,
+      "composite": 0.4402418000752867
     }
   ],
   "parameters": {
